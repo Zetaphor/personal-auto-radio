@@ -1,0 +1,5 @@
+spotdl
+pytube
+pydub
+selenium
+webdriver_manager
