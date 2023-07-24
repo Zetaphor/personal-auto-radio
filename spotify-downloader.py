@@ -31,10 +31,10 @@ def parse_spotify_item(url):
         album = sp.album(id)
         artist = album['artists'][0]['name']
         album_name = album['name']
-        return [(artist, album_name, track['id']) for track in album['tracks']['items']]
+        return [(artist, album_name, id, url_type)] # Returns album id for albums
     elif url_type == "playlist":
         playlist = sp.playlist(id)
-        return [(track['track']['artists'][0]['name'], track['track']['album']['name'], track['track']['id']) for track in playlist['tracks']['items']]
+        return [(track['track']['artists'][0]['name'], track['track']['album']['name'], track['track']['id'], url_type) for track in playlist['tracks']['items']]
     else:
         raise ValueError("URL must be an album or playlist")
 
@@ -47,7 +47,7 @@ with open(file_path, 'r') as file:
 for url in urls:
     items = parse_spotify_item(url)
 
-    for artist, album_name, track_id in items:
+    for artist, album_name, id, url_type in items:
         # Create the artist folder inside the Music folder
         artist_folder = os.path.join(music_directory, artist)
         os.makedirs(artist_folder, exist_ok=True)
@@ -58,7 +58,12 @@ for url in urls:
 
         # Run a bash command inside the album folder
         os.chdir(album_folder)
-        os.system(f"spotdl download 'https://open.spotify.com/track/{track_id}'")  # Updated to download specific track
+
+        # if album, download album once, if playlist, download tracks
+        if url_type == "album":
+            os.system(f"spotdl download 'https://open.spotify.com/album/{id}'")  # Download the entire album
+        else:
+            os.system(f"spotdl download 'https://open.spotify.com/track/{id}'")  # Download specific track
 
         # Move back to the Music directory after each iteration
         os.chdir(music_directory)
